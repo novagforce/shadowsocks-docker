@@ -1,23 +1,20 @@
-FROM ubuntu:trusty
+# shadowsocks-net-speeder
 
-MAINTAINER xuranjiao <xuran.jiao@outlook.com>
-
+FROM ubuntu:14.04.3
+MAINTAINER lowid <lowid@outlook.com>
 RUN apt-get update && \
-    apt-get install -y --force-yes -m python-pip python-m2crypto &&\
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get install -y python-pip libnet1 libnet1-dev libpcap0.8 libpcap0.8-dev git
 
-RUN pip install shadowsocks
+RUN pip install shadowsocks==2.8.2
 
-ENV SS_SERVER_ADDR 0.0.0.0
-ENV SS_SERVER_PORT 8388
-ENV SS_PASSWORD password
-ENV SS_METHOD aes-256-cfb
-ENV SS_TIMEOUT 300
+RUN git clone https://github.com/snooda/net-speeder.git net-speeder
+WORKDIR net-speeder
+RUN sh build.sh
 
-ADD start.sh /start.sh
-RUN chmod 755 /start.sh
+RUN mv net_speeder /usr/local/bin/
+COPY entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/net_speeder
 
-EXPOSE $SS_SERVER_PORT
-
-CMD ["sh", "-c", "/start.sh"]
+# Configure container to run as an executable
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
